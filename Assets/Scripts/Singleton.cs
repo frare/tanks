@@ -7,7 +7,7 @@ public class Singleton<T> : MonoBehaviour where T : Singleton<T> {
     private static T _instance;
 
     // Declarar no inspector
-    public bool DoNotDestroy;
+    private bool DoNotDestroy;
 
     // Ternário
     public static T instance { get { return _instance != null ? _instance : ( _instance = FindObjectOfType<T>()); } } 
@@ -16,7 +16,7 @@ public class Singleton<T> : MonoBehaviour where T : Singleton<T> {
         if (DoNotDestroy) {
 
             // Permanecer entre cenas
-            DontDestroyOnLoad(this.transform);
+            DontDestroyOnLoad(this.gameObject);
 
             // Procura todos os singletons das cena
             T[] singletons = FindObjectsOfType<T>();

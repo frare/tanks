@@ -3,20 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class NetworkController : MonoBehaviour {
+public class NetworkController : Singleton<NetworkController> {
 
     private string versionNumber = "0.1";
 
     [SerializeField] private GameObject connectionMenu;
     [SerializeField] private List<GameObject> views;
-    [SerializeField] private InputField roomInput;
-    
+    [SerializeField] private InputField nameInput, roomInput;
+    [SerializeField] private Text infoText;
+    private string playerName;
 
 
     // Photon Methods
     private void Awake() {
 
-        DontDestroyOnLoad(this.transform);
+        DontDestroyOnLoad(this.gameObject);
 
         PhotonNetwork.ConnectUsingSettings(versionNumber);
 
@@ -52,13 +53,12 @@ public class NetworkController : MonoBehaviour {
 
     private void OnDisconnectedFromPhoton() {
 
-        if (views[0].activeInHierarchy == true) {
-            views[0].SetActive(false);
+        for (int i = views.Count - 1; i > 0; i--) {
+            if (views[i].activeInHierarchy == true) {
+                views[i].SetActive(false);
+            }
         }
-        if (views[1].activeInHierarchy == true) {
-            views[1].SetActive(false);
-        }
-        views[2].SetActive(true);
+        views[views.Count - 1].SetActive(true);
         Debug.Log("Disconnected");
     }
 
@@ -70,10 +70,52 @@ public class NetworkController : MonoBehaviour {
     }
     // ***** ******
 
+    public void OnNameClicked() {
+
+        PhotonNetwork.player.NickName = nameInput.text;
+
+        views[1].SetActive(false);
+        views[2].SetActive(true);
+    }
+
     public void OnClickPlay() {
 
-        RoomOptions roomOptions = new RoomOptions();
-        roomOptions.MaxPlayers = 2;
-        PhotonNetwork.JoinOrCreateRoom(roomInput.text, roomOptions, TypedLobby.Default);
+        RoomInfo[] rooms = PhotonNetwork.GetRoomList();
+
+        if (rooms.Length == 0) {
+            RoomOptions roomOptions = new RoomOptions();
+            roomOptions.MaxPlayers = 2;
+            PhotonNetwork.CreateRoom(roomInput.text, roomOptions, TypedLobby.Default);
+
+            infoText.text = "Room not found! Creating...";
+        }
+        else {
+            for (int i = 0; i < rooms.Length; i++) {
+                if (rooms[i].Name == roomInput.text) {
+                    if (rooms[i].PlayerCount == rooms[i].MaxPlayers) {
+
+                        infoText.text = "Room is full!";
+                    }
+                    else {
+
+                        PhotonNetwork.JoinRoom(roomInput.text);
+
+                        infoText.text = "Room found! Joining...";
+                    }
+                }
+                else {
+                    RoomOptions roomOptions = new RoomOptions();
+                    roomOptions.MaxPlayers = 2;
+                    PhotonNetwork.CreateRoom(roomInput.text, roomOptions, TypedLobby.Default);
+
+                    infoText.text = "Room not found! Creating...";
+                }
+            }
+        }
+    }
+
+    public string GetPlayerName() {
+
+        return playerName;
     }
 }

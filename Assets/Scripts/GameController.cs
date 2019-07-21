@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameController : Singleton<GameController> {
 
@@ -19,18 +19,10 @@ public class GameController : Singleton<GameController> {
 
     private void SpawnPlayer() {
 
-        switch (PhotonNetwork.player.ID) {
-            case 1:
-                PhotonNetwork.Instantiate("Player1", Vector3.zero, Quaternion.identity, 0);
-                break;
-
-            case 2:
-                PhotonNetwork.Instantiate("Player2", Vector3.zero, Quaternion.identity, 0);
-                break;
-        }
+        PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
     }
 
-    public bool IsDevTesting() {
+    public bool GetDevTesting() {
 
         return devTesting;
     }
