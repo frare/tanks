@@ -19,7 +19,7 @@ public class GameController : Singleton<GameController> {
 
     private void SpawnPlayer() {
 
-        PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
+        GameObject player = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
     }
 
     public bool GetDevTesting() {

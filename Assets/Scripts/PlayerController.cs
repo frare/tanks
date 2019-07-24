@@ -7,12 +7,13 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
 
     private PhotonView photView;
     private Camera playerCamera;
+    private GameObject playerHud;
+    private Text playerPing;
     private TankBehavior tankScript;
 
     [SerializeField] private List<Sprite> bodySprites;
     [SerializeField] private List<Sprite> cannonSprites;
-
-    private int playerNumber;
+    [SerializeField] private int playerNumber;
 
     // Net smoothing
     private List<GameObject> cannons;
@@ -25,6 +26,8 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
 
         photView = GetComponent<PhotonView>();
         playerCamera = transform.GetChild(2).GetComponent<Camera>();
+        playerHud = transform.GetChild(3).gameObject;
+        playerPing = playerHud.transform.GetChild(1).GetComponent<Text>();
         tankScript = GetComponent<TankBehavior>();
 
         cannons = new List<GameObject>();
@@ -38,8 +41,11 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
         if (!GameController.instance.GetDevTesting()) {
             if (photView.isMine) {
                 playerCamera.gameObject.SetActive(true);
+                playerHud.SetActive(true);
+                playerHud.transform.GetChild(0).GetComponent<Text>().text = "Room: " + PhotonNetwork.room.Name + " (BR)";
                 photView.RPC("SetName", PhotonTargets.AllBuffered, PhotonNetwork.player.NickName);
-                photView.RPC("SetColor", PhotonTargets.AllBuffered, PhotonNetwork.player.ID);
+                playerNumber = PhotonNetwork.player.ID;
+                photView.RPC("SetColor", PhotonTargets.AllBuffered, playerNumber);
             }
         }
     }
@@ -49,9 +55,7 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
         if (!GameController.instance.GetDevTesting()) {
             if (photView.isMine) {
                 CheckInput();
-            }
-            else {
-                NetSmooth();
+                UpdateHUD();
             }
         }
         else {
@@ -59,14 +63,29 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
         }
     }
 
+    private void Update() {
+
+        if (!GameController.instance.GetDevTesting()) {
+            if (photView.isMine) {
+                if (Input.GetButtonDown("Shoot")) {
+                    photView.RPC("Shoot", PhotonTargets.All);
+                }
+            }
+            else {
+                NetSmooth();
+            }
+        }
+    }
+
+    private void UpdateHUD() {
+
+        playerPing.text = "Ping: " + PhotonNetwork.GetPing();
+    }
+
     private void CheckInput() {
 
         tankScript.Move(new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")));
         tankScript.RotateCannons(Input.mousePosition, playerCamera);
-
-        if (Input.GetButtonDown("Shoot")) {
-            tankScript.Shoot();
-        }
     }
 
     private void NetSmooth() {
@@ -84,9 +103,9 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
         }
     }
 
-    public void SetPlayerNumber(int number) {
+    public int GetPlayerNumber() {
 
-        playerNumber = number;
+        return playerNumber;
     }
 
     [PunRPC]
@@ -98,6 +117,7 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
     [PunRPC]
     private void SetColor(int playerID) {
 
+        playerNumber = playerID;
         transform.GetChild(0).GetChild(0).GetComponent<SpriteRenderer>().sprite = bodySprites[playerID - 1];
         transform.GetChild(0).GetChild(1).GetComponent<SpriteRenderer>().sprite = cannonSprites[playerID - 1];
         if (playerID == 1) {

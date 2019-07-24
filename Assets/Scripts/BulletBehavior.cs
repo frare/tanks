@@ -4,31 +4,17 @@ using UnityEngine;
 
 public class BulletBehavior : MonoBehaviour {
 
-    private PhotonView photView;
     private Rigidbody2D rb2d;
+    private SpriteRenderer sprRend;
 
     [SerializeField] private float moveSpeed;
     [SerializeField] private List<Sprite> sprites;
-
-    private Vector3 selfPosition;
+    [SerializeField] private int owner;
 
     private void Awake() {
 
-        photView = GetComponent<PhotonView>();
         rb2d = GetComponent<Rigidbody2D>();
-    }
-
-    private void Start() {
-
-        if (photView.owner.ID == 1) {
-            GetComponent<SpriteRenderer>().sprite = sprites[0];
-        }
-        else if (photView.owner.ID == 2) {
-            GetComponent<SpriteRenderer>().sprite = sprites[1];
-        }
-        else {
-            GetComponent<SpriteRenderer>().sprite = sprites[3];
-        }
+        sprRend = GetComponent<SpriteRenderer>();
     }
 
     private void Update() {
@@ -36,24 +22,30 @@ public class BulletBehavior : MonoBehaviour {
         transform.Translate(Vector2.right * moveSpeed * Time.deltaTime);
     }
 
-    private void OnTriggerEnter2D(Collider2D col) {
+    public void SetOwner(int value) {
 
-        if (photView.isMine) {
-            if (col.gameObject.tag == "Enemy") {
-                PhotonNetwork.Destroy(this.gameObject);
-            }
-        }
-    }
-
-    // Photon Methods
-    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
-
-        if (stream.isWriting) {
-            stream.SendNext(transform.position);
+        if (value == 1 || value == 2) {
+            owner = value;
+            sprRend.sprite = sprites[value];
         }
         else {
-            selfPosition = (Vector3)stream.ReceiveNext();
+            owner = 0;
+            sprRend.sprite = sprites[0];
         }
     }
-    // ***** *****
+
+    private void OnTriggerEnter2D(Collider2D col) {
+
+        if (col.tag == "Enemy") {
+            if (PhotonNetwork.player.ID == owner) {
+                EnemyController.instance.DamageEnemy(col.GetComponent<EnemyBehavior>().GetEnemyId(), 1);
+            }
+            Destroy(this.gameObject);
+        }
+
+        if (col.tag == "Object") {
+
+            Destroy(this.gameObject);
+        }
+    }
 }

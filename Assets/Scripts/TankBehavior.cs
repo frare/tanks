@@ -8,9 +8,12 @@ public class TankBehavior : MonoBehaviour {
 
     [SerializeField] private float moveSpeed;
 
+    [SerializeField] private GameObject bulletPfb;
+
     private float targetRotation;
     private Transform tankBody;
     private List<GameObject> cannons;
+    private int playerNumber;
 
     private void Awake() {
 
@@ -22,6 +25,16 @@ public class TankBehavior : MonoBehaviour {
         cannons.Add(transform.GetChild(0).GetChild(1).gameObject);
     }
 
+    private void Start() {
+
+        if (GetComponent<PlayerController>()) {
+            playerNumber = GetComponent<PlayerController>().GetPlayerNumber();
+        }
+        else {
+            playerNumber = 0;
+        }
+    }
+
     public void Move(Vector2 moveDirection) {
 
         rb2d.velocity = moveDirection.normalized * moveSpeed;
@@ -30,10 +43,12 @@ public class TankBehavior : MonoBehaviour {
         }
     }
 
+    [PunRPC]
     public void Shoot() {
 
         foreach (GameObject obj in cannons) {
-            PhotonNetwork.Instantiate("Bullet", obj.transform.GetChild(0).transform.position, obj.transform.rotation, 0);
+            GameObject bullet = Instantiate(bulletPfb, obj.transform.GetChild(0).transform.position, obj.transform.rotation);
+            bullet.GetComponent<BulletBehavior>().SetOwner(playerNumber);
         }
     }
 

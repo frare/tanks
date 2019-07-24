@@ -1801,7 +1801,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Enter room name...
+  m_Text: Enter name...
 --- !u!222 &1751628377
 CanvasRenderer:
   m_ObjectHideFlags: 0

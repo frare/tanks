@@ -16,7 +16,7 @@ MonoBehaviour:
   VoiceAppID: 
   ChatAppID: 
   HostType: 1
-  PreferredRegion: 1
+  PreferredRegion: 7
   EnabledRegions: -1
   Protocol: 0
   ServerAddress: 
@@ -40,4 +40,10 @@ MonoBehaviour:
   - SetName
   - SetColor
   - Shoot
+  - DestroyThis
+  - DestroyThisRPC
+  - TakeDamageRPC
+  - DamageEnemyRPC
+  - DestroyEnemyRPC
+  - SpawnEnemyRPC
   DisableAutoOpenWizard: 1
