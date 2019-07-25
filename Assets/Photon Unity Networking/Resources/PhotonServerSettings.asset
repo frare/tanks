@@ -46,4 +46,5 @@ MonoBehaviour:
   - DamageEnemyRPC
   - DestroyEnemyRPC
   - SpawnEnemyRPC
+  - ShowEmote
   DisableAutoOpenWizard: 1

@@ -10,6 +10,7 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
     private GameObject playerHud;
     private Text playerPing;
     private TankBehavior tankScript;
+    private Animator emoteAnimator;
 
     [SerializeField] private List<Sprite> bodySprites;
     [SerializeField] private List<Sprite> cannonSprites;
@@ -29,6 +30,7 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
         playerHud = transform.GetChild(3).gameObject;
         playerPing = playerHud.transform.GetChild(1).GetComponent<Text>();
         tankScript = GetComponent<TankBehavior>();
+        emoteAnimator = transform.GetChild(4).GetComponent<Animator>();
 
         cannons = new List<GameObject>();
         cannons = tankScript.GetCannons();
@@ -69,6 +71,19 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
             if (photView.isMine) {
                 if (Input.GetButtonDown("Shoot")) {
                     photView.RPC("Shoot", PhotonTargets.All);
+                }
+
+                if (Input.GetKeyDown(KeyCode.Alpha1)) {
+                    photView.RPC("ShowEmote", PhotonTargets.AllViaServer, 0);
+                }
+                else if (Input.GetKeyDown(KeyCode.Alpha2)) {
+                    photView.RPC("ShowEmote", PhotonTargets.AllViaServer, 1);
+                }
+                else if (Input.GetKeyDown(KeyCode.Alpha3)) {
+                    photView.RPC("ShowEmote", PhotonTargets.AllViaServer, 2);
+                }
+                else if (Input.GetKeyDown(KeyCode.Alpha4)) {
+                    photView.RPC("ShowEmote", PhotonTargets.AllViaServer, 3);
                 }
             }
             else {
@@ -125,6 +140,28 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
         }
         else if (playerID == 2) {
             transform.GetChild(1).GetChild(0).GetComponent<Text>().color = Color.HSVToRGB(0.0f, 0.5f, 1.0f);
+        }
+    }
+
+    [PunRPC]
+    private void ShowEmote(int emote) {
+
+        switch (emote) {
+            case 0:
+                emoteAnimator.SetTrigger("happy");
+                break;
+
+            case 1:
+                emoteAnimator.SetTrigger("sad");
+                break;
+
+            case 2:
+                emoteAnimator.SetTrigger("angry");
+                break;
+
+            case 3:
+                emoteAnimator.SetTrigger("exclamation");
+                break;
         }
     }
 
