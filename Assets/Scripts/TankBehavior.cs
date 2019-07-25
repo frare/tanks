@@ -15,6 +15,8 @@ public class TankBehavior : MonoBehaviour {
     private List<GameObject> cannons;
     private int playerNumber;
 
+    private EnemyBehavior enemyScript;
+
     private void Awake() {
 
         rb2d = GetComponent<Rigidbody2D>();
@@ -23,15 +25,13 @@ public class TankBehavior : MonoBehaviour {
 
         cannons = new List<GameObject>();
         cannons.Add(transform.GetChild(0).GetChild(1).gameObject);
-    }
-
-    private void Start() {
 
         if (GetComponent<PlayerController>()) {
             playerNumber = GetComponent<PlayerController>().GetPlayerNumber();
         }
         else {
             playerNumber = 0;
+            enemyScript = GetComponent<EnemyBehavior>();
         }
     }
 
@@ -41,6 +41,11 @@ public class TankBehavior : MonoBehaviour {
         if (moveDirection.magnitude > 0.5f) {
             RotateBody(moveDirection);
         }
+    }
+
+    public void Stop() {
+
+        rb2d.velocity = Vector2.zero;
     }
 
     [PunRPC]
@@ -55,22 +60,37 @@ public class TankBehavior : MonoBehaviour {
     private void RotateBody(Vector2 moveDirection) {
 
         targetRotation = (int)Mathf.Round(Vector2.SignedAngle(Vector2.right, moveDirection) / 45) * 45;
-        tankBody.rotation = Quaternion.Euler(new Vector3(0, 0,
-            Mathf.LerpAngle(tankBody.eulerAngles.z, targetRotation, Time.deltaTime * 10)));
+        tankBody.eulerAngles = new Vector3(0, 0,
+            Mathf.LerpAngle(tankBody.eulerAngles.z, targetRotation, Time.deltaTime * 10));
     }
 
     public void RotateCannons(Vector3 targetPos, Camera cam) {
 
-        foreach (GameObject obj in cannons) {
-            targetPos = Input.mousePosition;
-            Vector3 objectPos = cam.WorldToScreenPoint(transform.position);
+        if (playerNumber != 0) {
+            foreach (GameObject obj in cannons) {
+                targetPos = Input.mousePosition;
+                Vector3 objectPos = cam.WorldToScreenPoint(transform.position);
 
-            targetPos.x = targetPos.x - objectPos.x;
-            targetPos.y = targetPos.y - objectPos.y;
-            targetPos.z = 10.0f;
+                targetPos.x = targetPos.x - objectPos.x;
+                targetPos.y = targetPos.y - objectPos.y;
+                targetPos.z = 10.0f;
 
-            float angle = Mathf.Atan2(targetPos.y, targetPos.x) * Mathf.Rad2Deg;
-            obj.transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
+                float angle = Mathf.Atan2(targetPos.y, targetPos.x) * Mathf.Rad2Deg;
+                obj.transform.eulerAngles = new Vector3(0, 0, angle);
+            }
+        }
+        else {
+            foreach (GameObject obj in cannons) {
+
+                targetPos = cam.WorldToScreenPoint(targetPos);
+                Vector3 objectPos = cam.WorldToScreenPoint(transform.position);
+
+                targetPos.x = targetPos.x - objectPos.x;
+                targetPos.y = targetPos.y - objectPos.y;
+                targetPos.z = 10.0f;
+
+                enemyScript.SetCannonRotation(Mathf.Atan2(targetPos.y, targetPos.x) * Mathf.Rad2Deg);
+            }
         }
     }
 

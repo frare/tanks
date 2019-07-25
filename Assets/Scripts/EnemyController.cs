@@ -6,9 +6,10 @@ public class EnemyController : Singleton<EnemyController> {
 
     private PhotonView photView;
 
-    [SerializeField] private GameObject enemyPfb;
     private List<GameObject> enemies = new List<GameObject>();
     private int lastEnemyId;
+
+    [SerializeField] private GameObject enemyPfb;
 
     private void Awake() {
 
@@ -17,7 +18,8 @@ public class EnemyController : Singleton<EnemyController> {
 
     public void SpawnEnemy() {
 
-        photView.RPC("SpawnEnemyRPC", PhotonTargets.AllBufferedViaServer);
+        int random = Random.Range(0, 4);
+        photView.RPC("SpawnEnemyRPC", PhotonTargets.AllBufferedViaServer, random);
     }
 
     public void DamageEnemy(int enemyId, int amount) {
@@ -30,6 +32,11 @@ public class EnemyController : Singleton<EnemyController> {
         photView.RPC("DestroyEnemyRPC", PhotonTargets.AllBuffered, enemyId);
     }
 
+    public void MoveEnemy(int enemyId, Vector3 target) {
+
+        photView.RPC("MoveEnemyRPC", PhotonTargets.AllBufferedViaServer, enemyId, target);
+    }
+
     private void Update() {
         
         if (PhotonNetwork.player.ID == 1) {
@@ -40,9 +47,31 @@ public class EnemyController : Singleton<EnemyController> {
     }
 
     [PunRPC]
-    private void SpawnEnemyRPC() {
+    private void SpawnEnemyRPC(int position) {
 
-        GameObject enemy = Instantiate(enemyPfb, Vector3.zero, Quaternion.identity);
+        Vector3 spawnPosition = Vector3.zero;
+
+        switch (position) {
+
+            case 0:
+                spawnPosition = new Vector3(-8.0f, 3.25f, 0);
+                break;
+
+            case 1:
+                spawnPosition = new Vector3(-8.0f, -3.25f, 0);
+                break;
+
+            case 2:
+                spawnPosition = new Vector3(5.0f, 3.25f, 0);
+                break;
+
+            case 3:
+                spawnPosition = new Vector3(7.25f, -4.25f, 0);
+                break;
+
+        }
+
+        GameObject enemy = Instantiate(enemyPfb, spawnPosition, Quaternion.identity);
         enemy.GetComponent<EnemyBehavior>().SetEnemyId(lastEnemyId);
         lastEnemyId++;
         enemies.Add(enemy);
@@ -67,6 +96,16 @@ public class EnemyController : Singleton<EnemyController> {
                 enemies.Remove(enemy);
                 Destroy(enemy);
                 break;
+            }
+        }
+    }
+
+    [PunRPC]
+    private void MoveEnemyRPC(int enemyId, Vector3 target) {
+
+        foreach (GameObject enemy in enemies) {
+            if (enemyId == enemy.GetComponent<EnemyBehavior>().GetEnemyId()) {
+                enemy.GetComponent<EnemyBehavior>().SetTargetPosition(target);
             }
         }
     }

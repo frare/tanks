@@ -47,5 +47,13 @@ public class BulletBehavior : MonoBehaviour {
 
             Destroy(this.gameObject);
         }
+
+        if (col.tag == "Player") {
+            if (owner == 0 && PhotonNetwork.player.ID == 1) {
+
+                col.GetComponent<PlayerController>().TakeDamage(1);
+                Destroy(this.gameObject);
+            }
+        }
     }
 }

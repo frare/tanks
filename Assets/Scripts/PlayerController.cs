@@ -15,12 +15,14 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
     [SerializeField] private List<Sprite> bodySprites;
     [SerializeField] private List<Sprite> cannonSprites;
     [SerializeField] private int playerNumber;
+    [SerializeField] private float health;
 
     // Net smoothing
     private List<GameObject> cannons;
     private List<float> cannonRotations;
     private Vector3 selfPosition;
     private float selfRotation;
+
 
 
     private void Awake() {
@@ -36,9 +38,6 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
         cannons = tankScript.GetCannons();
         cannonRotations = new List<float>();
         cannonRotations.Add(transform.GetChild(0).transform.GetChild(1).transform.eulerAngles.z);
-    }
-
-    private void Start() {
 
         if (!GameController.instance.GetDevTesting()) {
             if (photView.isMine) {
@@ -108,8 +107,8 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
         // Position
         transform.position = transform.position = Vector3.Lerp(transform.position, selfPosition, Time.deltaTime * 10);
         // Body rotation
-        tankScript.GetTankTransform().rotation = Quaternion.Euler(new Vector3(0, 0,
-            Mathf.LerpAngle(transform.eulerAngles.z, selfRotation, Time.deltaTime * 10)));
+        tankScript.GetTankTransform().eulerAngles = new Vector3(0, 0,
+            Mathf.LerpAngle(transform.eulerAngles.z, selfRotation, Time.deltaTime * 10));
         // Cannons
         cannons = tankScript.GetCannons();
         for (int i = 0; i < cannons.Count; i++) {
@@ -121,6 +120,17 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
     public int GetPlayerNumber() {
 
         return playerNumber;
+    }
+
+    public void TakeDamage(int amount) {
+
+        photView.RPC("TakeDamageRPC", PhotonTargets.All, amount);
+    }
+
+    [PunRPC]
+    private void TakeDamageRPC(int amount) {
+
+        health -= amount;
     }
 
     [PunRPC]
