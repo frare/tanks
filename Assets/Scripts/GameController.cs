@@ -7,6 +7,8 @@ public class GameController : Singleton<GameController> {
 
     [SerializeField] private bool devTesting;
 
+    [SerializeField] private GameObject newCannon;
+
     private void Start() {
 
         if (!devTesting) {
@@ -20,6 +22,11 @@ public class GameController : Singleton<GameController> {
     private void SpawnPlayer() {
 
         GameObject player = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
+    }
+
+    public GameObject GetNewCannon() {
+
+        return newCannon;
     }
 
     public bool GetDevTesting() {

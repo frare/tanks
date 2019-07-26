@@ -70,7 +70,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_Sprite: {fileID: 21300000, guid: db92a53b88c8fb248a85739ae5085289, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -95,10 +95,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 10
-  sprites:
+  normalSprites:
   - {fileID: 21300000, guid: db92a53b88c8fb248a85739ae5085289, type: 3}
   - {fileID: 21300000, guid: 2fb291ff0f069ec49ac0ade05d74f09d, type: 3}
   - {fileID: 21300000, guid: 605154a4614db6d46979d782159579e6, type: 3}
+  explosiveSprites:
+  - {fileID: 21300000, guid: 984b9dc7be04e574b9870edf48a2647c, type: 3}
+  - {fileID: 21300000, guid: fce3ae96958ddee4ab38f1ca61ebd933, type: 3}
+  - {fileID: 21300000, guid: 1e2ff3451f18174489e6c31710590028, type: 3}
+  penetrationSprites:
+  - {fileID: 21300000, guid: dacbb5e9b02a26a45a2a41a3f616b5f7, type: 3}
+  - {fileID: 21300000, guid: 8ca6615ce3cb34c4a8f40b6a7d9a8ace, type: 3}
+  - {fileID: 21300000, guid: b0f59ccbab250014e8ea3bcf2093130c, type: 3}
+  owner: 0
 --- !u!50 &7696429587887914638
 Rigidbody2D:
   serializedVersion: 4

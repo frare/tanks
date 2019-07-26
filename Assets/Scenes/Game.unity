@@ -1590,6 +1590,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4b557728bcd6ac4998bb86859a79a14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  explosionPfb: {fileID: 2160933831027413225, guid: 33bb1f8b0693e534aafaa05fd1c4be2d,
+    type: 3}
+  smokeExplosionPfb: {fileID: 9126745413526719923, guid: 998e6334508f2db41b559e39f9937d09,
+    type: 3}
   enemyPfb: {fileID: 5781823587905120624, guid: e23fa4f28f658a34697b49aee88bf1f6,
     type: 3}
 --- !u!4 &505223942
@@ -5221,6 +5225,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   devTesting: 0
+  newCannon: {fileID: 1712364036030585235, guid: f72ec3ce8db3ef2498c389b2741cbb8f,
+    type: 3}
 --- !u!1 &1711411292
 GameObject:
   m_ObjectHideFlags: 0

@@ -7,7 +7,7 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
 
     private PhotonView photView;
     private Camera playerCamera;
-    private GameObject playerHud;
+    private GameObject playerHud, playerCrosshair;
     private Text playerPing;
     private TankBehavior tankScript;
     private Animator emoteAnimator;
@@ -30,6 +30,7 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
         photView = GetComponent<PhotonView>();
         playerCamera = transform.GetChild(2).GetComponent<Camera>();
         playerHud = transform.GetChild(3).gameObject;
+        playerCrosshair = transform.GetChild(5).gameObject;
         playerPing = playerHud.transform.GetChild(1).GetComponent<Text>();
         tankScript = GetComponent<TankBehavior>();
         emoteAnimator = transform.GetChild(4).GetComponent<Animator>();
@@ -44,8 +45,10 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
                 playerCamera.gameObject.SetActive(true);
                 playerHud.SetActive(true);
                 playerHud.transform.GetChild(0).GetComponent<Text>().text = "Room: " + PhotonNetwork.room.Name + " (BR)";
-                photView.RPC("SetName", PhotonTargets.AllBuffered, PhotonNetwork.player.NickName);
+                playerCrosshair.SetActive(true);
+                Cursor.visible = false;
                 playerNumber = PhotonNetwork.player.ID;
+                photView.RPC("SetName", PhotonTargets.AllBuffered, PhotonNetwork.player.NickName);
                 photView.RPC("SetColor", PhotonTargets.AllBuffered, playerNumber);
             }
         }
@@ -84,6 +87,16 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
                 else if (Input.GetKeyDown(KeyCode.Alpha4)) {
                     photView.RPC("ShowEmote", PhotonTargets.AllViaServer, 3);
                 }
+
+                if (Input.GetKeyDown(KeyCode.F1)) {
+                    photView.RPC("ChangeCannonRPC", PhotonTargets.AllViaServer, 0);
+                }
+                else if (Input.GetKeyDown(KeyCode.F2)) {
+                    photView.RPC("ChangeCannonRPC", PhotonTargets.AllViaServer, 1);
+                }
+                else if (Input.GetKeyDown(KeyCode.F3)) {
+                    photView.RPC("ChangeCannonRPC", PhotonTargets.AllViaServer, 2);
+                }
             }
             else {
                 NetSmooth();
@@ -105,15 +118,15 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
     private void NetSmooth() {
 
         // Position
-        transform.position = transform.position = Vector3.Lerp(transform.position, selfPosition, Time.deltaTime * 10);
+        transform.position = Vector3.Lerp(transform.position, selfPosition, Time.deltaTime * 10);
         // Body rotation
         tankScript.GetTankTransform().eulerAngles = new Vector3(0, 0,
-            Mathf.LerpAngle(transform.eulerAngles.z, selfRotation, Time.deltaTime * 10));
+            Mathf.LerpAngle(tankScript.GetTankTransform().eulerAngles.z, selfRotation, Time.deltaTime * 10));
         // Cannons
         cannons = tankScript.GetCannons();
-        for (int i = 0; i < cannons.Count; i++) {
-            cannons[i].transform.rotation = Quaternion.Euler(new Vector3(0, 0,
-                Mathf.LerpAngle(cannons[i].transform.eulerAngles.z, cannonRotations[i], Time.deltaTime * 10)));
+        foreach (GameObject cannon in cannons) {
+            cannon.transform.rotation = Quaternion.Euler(new Vector3(0, 0,
+                Mathf.LerpAngle(cannon.transform.eulerAngles.z, cannonRotations[0], Time.deltaTime * 10)));
         }
     }
 

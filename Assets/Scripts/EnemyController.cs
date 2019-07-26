@@ -6,6 +6,8 @@ public class EnemyController : Singleton<EnemyController> {
 
     private PhotonView photView;
 
+    [SerializeField] private GameObject explosionPfb, smokeExplosionPfb;
+
     private List<GameObject> enemies = new List<GameObject>();
     private int lastEnemyId;
 
@@ -35,6 +37,11 @@ public class EnemyController : Singleton<EnemyController> {
     public void MoveEnemy(int enemyId, Vector3 target) {
 
         photView.RPC("MoveEnemyRPC", PhotonTargets.AllBufferedViaServer, enemyId, target);
+    }
+
+    public void SpawnExplosionSmoke(Vector3 position) {
+
+        photView.RPC("SpawnExplosionSmokeRPC", PhotonTargets.AllBufferedViaServer, position);
     }
 
     private void Update() {
@@ -94,6 +101,7 @@ public class EnemyController : Singleton<EnemyController> {
         foreach (GameObject enemy in enemies) {
             if (enemyId == enemy.GetComponent<EnemyBehavior>().GetEnemyId()) {
                 enemies.Remove(enemy);
+                Instantiate(explosionPfb, enemy.transform.position, Quaternion.identity);
                 Destroy(enemy);
                 break;
             }
@@ -108,5 +116,11 @@ public class EnemyController : Singleton<EnemyController> {
                 enemy.GetComponent<EnemyBehavior>().SetTargetPosition(target);
             }
         }
+    }
+
+    [PunRPC]
+    private void SpawnExplosionSmokeRPC(Vector3 position) {
+
+        Instantiate(smokeExplosionPfb, position, Quaternion.identity);
     }
 }

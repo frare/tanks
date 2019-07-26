@@ -48,4 +48,8 @@ MonoBehaviour:
   - SpawnEnemyRPC
   - ShowEmote
   - MoveEnemyRPC
+  - ChangeCannonRPC
+  - SpawnSmokeExplosion
+  - SpawnSmokeExplosionRPC
+  - SpawnExplosionSmokeRPC
   DisableAutoOpenWizard: 1

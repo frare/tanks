@@ -47,7 +47,7 @@ public class EnemyBehavior : Photon.MonoBehaviour {
         }
 
         Collider2D hit = Physics2D.OverlapCircle(transform.position, range, 1 << 8);
-        if (hit) {
+        if (hit) { 
             isAiming = true;
             tankScript.RotateCannons(hit.transform.position, Camera.main);
         }

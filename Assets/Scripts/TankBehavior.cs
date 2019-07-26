@@ -8,12 +8,13 @@ public class TankBehavior : MonoBehaviour {
 
     [SerializeField] private float moveSpeed;
 
-    [SerializeField] private GameObject bulletPfb;
+    [SerializeField] private GameObject bulletPfb, shotEffectPfb;
 
     private float targetRotation;
     private Transform tankBody;
     private List<GameObject> cannons;
     private int playerNumber;
+    private int bulletType;
 
     private EnemyBehavior enemyScript;
 
@@ -25,6 +26,9 @@ public class TankBehavior : MonoBehaviour {
 
         cannons = new List<GameObject>();
         cannons.Add(transform.GetChild(0).GetChild(1).gameObject);
+    }
+
+    private void Start() {
 
         if (GetComponent<PlayerController>()) {
             playerNumber = GetComponent<PlayerController>().GetPlayerNumber();
@@ -52,8 +56,14 @@ public class TankBehavior : MonoBehaviour {
     public void Shoot() {
 
         foreach (GameObject obj in cannons) {
-            GameObject bullet = Instantiate(bulletPfb, obj.transform.GetChild(0).transform.position, obj.transform.rotation);
-            bullet.GetComponent<BulletBehavior>().SetOwner(playerNumber);
+            GameObject bullet = Instantiate(bulletPfb, obj.transform.GetChild(0).position, obj.transform.rotation);
+            BulletBehavior bulletScript = bullet.GetComponent<BulletBehavior>();
+            bulletScript.SetType(bulletType);
+            bulletScript.SetOwner(playerNumber);
+            //bulletScript.SetOwner(GetComponent<PlayerController>().GetPlayerNumber());
+
+            GameObject effect = Instantiate(shotEffectPfb, obj.transform.GetChild(0).position, obj.transform.rotation);
+            effect.transform.parent = obj.transform.GetChild(0);
         }
     }
 
@@ -66,7 +76,7 @@ public class TankBehavior : MonoBehaviour {
 
     public void RotateCannons(Vector3 targetPos, Camera cam) {
 
-        if (playerNumber != 0) {
+        if (!enemyScript) {
             foreach (GameObject obj in cannons) {
                 targetPos = Input.mousePosition;
                 Vector3 objectPos = cam.WorldToScreenPoint(transform.position);
@@ -92,6 +102,81 @@ public class TankBehavior : MonoBehaviour {
                 enemyScript.SetCannonRotation(Mathf.Atan2(targetPos.y, targetPos.x) * Mathf.Rad2Deg);
             }
         }
+    }
+
+    [PunRPC]
+    public void ChangeCannonRPC(int cannonId) {
+
+        Sprite spr = null;
+        GameObject newCannon = Instantiate(GameController.instance.GetNewCannon(), transform.position, Quaternion.identity);
+        newCannon.transform.parent = tankBody;
+
+        switch (cannonId) {
+
+            // Normal 
+            case 0:
+                if (playerNumber == 1) {
+                    spr = Resources.Load<Sprite>("Images/tankBlue_barrel2_outline");
+                }
+                else if (playerNumber == 2) {
+                    spr = Resources.Load<Sprite>("Images/tankRed_barrel2_outline");
+                }
+                else {
+                    spr = Resources.Load<Sprite>("Images/tankDark_barrel2_outline");
+                }
+
+                if (bulletType != 0) {
+                    foreach (GameObject cannon in cannons.ToArray()) {
+                        cannons.Remove(cannon);
+                        Destroy(cannon);
+                    }
+                }
+
+                if (cannons.Count == 0) {
+
+                    cannons.Add(newCannon);
+                }
+                else if (cannons.Count == 1) {
+                        
+                    cannons[0].transform.localPosition = new Vector3(0.0f, -0.1f, 0.0f);
+                    newCannon.transform.localPosition = new Vector3(0.0f, 0.1f, 0.0f);
+
+                    cannons.Add(newCannon);
+                }
+                else {
+
+                    Destroy(newCannon);
+                }
+
+                break;    
+
+            // Explosive
+            case 1:
+                spr = Resources.Load<Sprite>("Images/specialBarrel2_outline");
+
+                foreach (GameObject cannon in cannons.ToArray()) {
+                    cannons.Remove(cannon);
+                    Destroy(cannon);
+                }
+
+                cannons.Add(newCannon);
+                break;
+
+            // Penetration
+            case 2:
+                spr = Resources.Load<Sprite>("Images/specialBarrel7_outline");
+
+                foreach (GameObject cannon in cannons.ToArray()) {
+                    cannons.Remove(cannon);
+                    Destroy(cannon);
+                }
+
+                cannons.Add(newCannon);
+                break;
+        }
+
+        bulletType = cannonId;
+        newCannon.GetComponent<SpriteRenderer>().sprite = spr;
     }
 
     public Transform GetTankTransform() {
