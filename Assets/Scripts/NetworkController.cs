@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class NetworkController : Singleton<NetworkController> {
 
-    private string versionNumber = "0.1";
+    private string versionNumber = "0.1.1";
 
     [SerializeField] private GameObject connectionMenu;
     [SerializeField] private List<GameObject> views;

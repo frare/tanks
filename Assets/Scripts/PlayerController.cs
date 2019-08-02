@@ -11,11 +11,15 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
     private Text playerPing;
     private TankBehavior tankScript;
     private Animator emoteAnimator;
+    private Collider2D myCollider;
 
     [SerializeField] private List<Sprite> bodySprites;
     [SerializeField] private List<Sprite> cannonSprites;
     [SerializeField] private int playerNumber;
     [SerializeField] private float health;
+
+    private bool isRespawning;
+    private Coroutine flashRoutine;
 
     // Net smoothing
     private List<GameObject> cannons;
@@ -34,6 +38,7 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
         playerPing = playerHud.transform.GetChild(1).GetComponent<Text>();
         tankScript = GetComponent<TankBehavior>();
         emoteAnimator = transform.GetChild(4).GetComponent<Animator>();
+        myCollider = GetComponent<BoxCollider2D>();
 
         cannons = new List<GameObject>();
         cannons = tankScript.GetCannons();
@@ -44,7 +49,7 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
             if (photView.isMine) {
                 playerCamera.gameObject.SetActive(true);
                 playerHud.SetActive(true);
-                playerHud.transform.GetChild(0).GetComponent<Text>().text = "Room: " + PhotonNetwork.room.Name + " (BR)";
+                playerHud.transform.GetChild(0).GetComponent<Text>().text = "Room: " + PhotonNetwork.room.Name;
                 playerCrosshair.SetActive(true);
                 Cursor.visible = false;
                 playerNumber = PhotonNetwork.player.ID;
@@ -58,7 +63,9 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
 
         if (!GameController.instance.GetDevTesting()) {
             if (photView.isMine) {
-                CheckInput();
+                if (!isRespawning) {
+                    CheckInput();
+                }
                 UpdateHUD();
             }
         }
@@ -71,31 +78,23 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
 
         if (!GameController.instance.GetDevTesting()) {
             if (photView.isMine) {
-                if (Input.GetButtonDown("Shoot")) {
-                    photView.RPC("Shoot", PhotonTargets.All);
-                }
+                if (!isRespawning) {
+                    if (Input.GetButtonDown("Shoot")) {
+                        photView.RPC("Shoot", PhotonTargets.All);
+                    }
 
-                if (Input.GetKeyDown(KeyCode.Alpha1)) {
-                    photView.RPC("ShowEmote", PhotonTargets.AllViaServer, 0);
-                }
-                else if (Input.GetKeyDown(KeyCode.Alpha2)) {
-                    photView.RPC("ShowEmote", PhotonTargets.AllViaServer, 1);
-                }
-                else if (Input.GetKeyDown(KeyCode.Alpha3)) {
-                    photView.RPC("ShowEmote", PhotonTargets.AllViaServer, 2);
-                }
-                else if (Input.GetKeyDown(KeyCode.Alpha4)) {
-                    photView.RPC("ShowEmote", PhotonTargets.AllViaServer, 3);
-                }
-
-                if (Input.GetKeyDown(KeyCode.F1)) {
-                    photView.RPC("ChangeCannonRPC", PhotonTargets.AllViaServer, 0);
-                }
-                else if (Input.GetKeyDown(KeyCode.F2)) {
-                    photView.RPC("ChangeCannonRPC", PhotonTargets.AllViaServer, 1);
-                }
-                else if (Input.GetKeyDown(KeyCode.F3)) {
-                    photView.RPC("ChangeCannonRPC", PhotonTargets.AllViaServer, 2);
+                    if (Input.GetKeyDown(KeyCode.Alpha1)) {
+                        photView.RPC("ShowEmote", PhotonTargets.AllViaServer, 0);
+                    }
+                    else if (Input.GetKeyDown(KeyCode.Alpha2)) {
+                        photView.RPC("ShowEmote", PhotonTargets.AllViaServer, 1);
+                    }
+                    else if (Input.GetKeyDown(KeyCode.Alpha3)) {
+                        photView.RPC("ShowEmote", PhotonTargets.AllViaServer, 2);
+                    }
+                    else if (Input.GetKeyDown(KeyCode.Alpha4)) {
+                        photView.RPC("ShowEmote", PhotonTargets.AllViaServer, 3);
+                    }
                 }
             }
             else {
@@ -140,10 +139,85 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
         photView.RPC("TakeDamageRPC", PhotonTargets.All, amount);
     }
 
+    private IEnumerator Flash() {
+
+        for (int i = 0; i < 5; i++) {
+
+            SetVisibility(false);
+            yield return new WaitForSeconds(0.1f);
+            SetVisibility(true);
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+
+    private IEnumerator Respawn() {
+
+        if (!isRespawning) {
+            isRespawning = true;
+            StopCoroutine(flashRoutine);
+            SetVisibility(false);
+            tankScript.Stop();
+            myCollider.enabled = false;
+
+            for (int i = 5; i > 0; i--) {
+
+                SetVisibility(false);
+                photView.RPC("SetName", PhotonTargets.All, i.ToString());
+                yield return new WaitForSeconds(1.0f);
+            }
+
+            transform.position = Vector3.zero;
+            isRespawning = false;
+            SetVisibility(true);
+            myCollider.enabled = true;
+            health = 5;
+            photView.RPC("SetName", PhotonTargets.All, NetworkController.instance.GetPlayerName());
+        }
+    }
+
+    private void SetVisibility(bool visible) {
+
+        List<SpriteRenderer> sprRends = new List<SpriteRenderer>();
+        sprRends.Add(transform.GetChild(0).GetChild(0).GetComponent<SpriteRenderer>());
+        foreach (GameObject cannon in tankScript.GetCannons()) {
+            sprRends.Add(cannon.GetComponent<SpriteRenderer>());
+        }
+
+        if (visible) {
+            foreach (SpriteRenderer sr in sprRends) {
+                Color aux = sr.color;
+                aux.a = 1.0f;
+                sr.color = aux;
+            }
+        }
+        else {
+            foreach (SpriteRenderer sr in sprRends) {
+                Color aux = sr.color;
+                aux.a = 0.0f;
+                sr.color = aux;
+            }
+        }
+    }
+
+    [PunRPC]
+    private void RespawnRPC() {
+
+        StartCoroutine(Respawn());
+    }
+
     [PunRPC]
     private void TakeDamageRPC(int amount) {
 
-        health -= amount;
+        if (!isRespawning) {
+            health -= amount;
+
+            if (health <= 0) {
+                photView.RPC("RespawnRPC", PhotonTargets.All);
+            }
+            else {
+                flashRoutine = StartCoroutine(Flash());
+            }
+        }
     }
 
     [PunRPC]
@@ -169,22 +243,34 @@ public class PlayerController : Photon.MonoBehaviour, IPunObservable {
     [PunRPC]
     private void ShowEmote(int emote) {
 
-        switch (emote) {
-            case 0:
-                emoteAnimator.SetTrigger("happy");
-                break;
+        if (emoteAnimator.GetCurrentAnimatorStateInfo(0).IsName("Idle")) {
+            switch (emote) {
+                case 0:
+                    emoteAnimator.SetTrigger("happy");
+                    break;
 
-            case 1:
-                emoteAnimator.SetTrigger("sad");
-                break;
+                case 1:
+                    emoteAnimator.SetTrigger("sad");
+                    break;
 
-            case 2:
-                emoteAnimator.SetTrigger("angry");
-                break;
+                case 2:
+                    emoteAnimator.SetTrigger("angry");
+                    break;
 
-            case 3:
-                emoteAnimator.SetTrigger("exclamation");
-                break;
+                case 3:
+                    emoteAnimator.SetTrigger("exclamation");
+                    break;
+            }
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D col) {
+        
+        if (col.tag == "Weapon Crate") {
+
+            int random = Random.Range(0, 3);
+            photView.RPC("ChangeCannonRPC", PhotonTargets.AllViaServer, random);
+            EnemyController.instance.DestroyCrate(col.GetComponent<CrateBehavior>().GetCrateId());
         }
     }
 

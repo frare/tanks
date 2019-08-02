@@ -67,7 +67,7 @@ public class EnemyBehavior : Photon.MonoBehaviour {
 
     public void Shoot() {
 
-        tankScript.Shoot();
+        EnemyController.instance.ShootEnemy(enemyId);
     }
 
     public void SetTargetPosition(Vector3 target) {

@@ -52,4 +52,9 @@ MonoBehaviour:
   - SpawnSmokeExplosion
   - SpawnSmokeExplosionRPC
   - SpawnExplosionSmokeRPC
+  - SpawnCrateRPC
+  - DestroyCrateRPC
+  - FlashRPC
+  - RespawnRPC
+  - ShootEnemyRPC
   DisableAutoOpenWizard: 1

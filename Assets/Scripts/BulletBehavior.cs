@@ -23,6 +23,11 @@ public class BulletBehavior : MonoBehaviour {
         transform.Translate(Vector2.right * moveSpeed * Time.deltaTime);
     }
 
+    private void Start() {
+
+        Destroy(this.gameObject, 2.5f);
+    }
+
     public void SetOwner(int value) {
 
         if (type == 0) {
@@ -106,11 +111,14 @@ public class BulletBehavior : MonoBehaviour {
             }
 
             if (col.tag == "Player") {
-                if (owner == 0 && PhotonNetwork.player.ID == 1) {
+                if (owner == 0) {
 
-                    col.GetComponent<PlayerController>().TakeDamage(1);
                     if (type != 2) {
                         Destroy(this.gameObject);
+                    }
+
+                    if (col.GetComponent<PlayerController>().GetPlayerNumber() == PhotonNetwork.player.ID) {
+                        col.GetComponent<PlayerController>().TakeDamage(1);
                     }
                 }
             }

@@ -60,7 +60,6 @@ public class TankBehavior : MonoBehaviour {
             BulletBehavior bulletScript = bullet.GetComponent<BulletBehavior>();
             bulletScript.SetType(bulletType);
             bulletScript.SetOwner(playerNumber);
-            //bulletScript.SetOwner(GetComponent<PlayerController>().GetPlayerNumber());
 
             GameObject effect = Instantiate(shotEffectPfb, obj.transform.GetChild(0).position, obj.transform.rotation);
             effect.transform.parent = obj.transform.GetChild(0);
